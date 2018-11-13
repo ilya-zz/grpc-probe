@@ -3,7 +3,7 @@ PYDIR = python
 PROTOFILE := $(APIDIR)/api.proto
 PROTO_INC := ${GOPATH}/src/github.com/gogo/protobuf/protobuf
 
-PB := $(api)/api.pb.go
+PB := $(APIDIR)/api.pb.go
 
 BINDIR=build
 SERVER=$(BINDIR)/server
@@ -17,11 +17,11 @@ dirs:
 	@mkdir -p $(BINDIR)
 	@mkdir -p $(APIDIR)
 
-gogo: dirs protoclean 	
+gogo: dirs 
 	protoc -I=. -I=$(PROTO_INC) --gogoslick_out=plugins=grpc:. --python_out=. $(PROTOFILE)
 	python -m grpc_tools.protoc -Iapi --python_out=$(PYDIR) --grpc_python_out=$(PYDIR) $(PROTOFILE)
 
-proto: dirs protoclean	
+proto: dirs 
 	protoc -I=. --go_out=plugins=grpc:. $(PROTOFILE)
 	python -m grpc_tools.protoc -Iapi --python_out=$(PYDIR) --grpc_python_out=$(PYDIR) $(PROTOFILE)
 
@@ -31,7 +31,8 @@ bench%:
 protoclean:
 	@rm -f $(APIDIR)/*.pb.go
 
-$(PB): gogo
+$(PB): 
+	protoc -I=. -I=$(PROTO_INC) --gogoslick_out=plugins=grpc:. --python_out=. $(PROTOFILE)
 
 $(SERVER): $(PB) cmd/server/main.go
 	go build -o $@ ./cmd/server

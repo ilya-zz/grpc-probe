@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package api;
+
+message Hello {
+  int64 id = 1;
+  string msg = 2;
+  bytes data =3;
+}
+
+message Status {
+  int64 tsid = 1;
+}
+
+message ToTranslate {
+  int64 id = 2;
+  string text = 1;
+}
+message TranslateResult {
+  int64 id = 2;
+  map<string, string> results = 1;
+}
+message RecordMessage {
+   bytes message = 1;
+}
+message StoreSummary {
+  int64 written = 1; 
+}
+
+service Welcome {
+  rpc Hi(Hello) returns(stream Status);
+  rpc Translate(stream ToTranslate) returns(stream TranslateResult);
+  rpc Store(stream RecordMessage) returns(StoreSummary);
+}

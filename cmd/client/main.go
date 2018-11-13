@@ -11,7 +11,7 @@ import (
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
-	pb "github.com/ilya-zz/foo/api"
+	pb "github.com/ilya-zz/grpc-probe/api"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -48,11 +48,22 @@ func grpcOpts() []grpc.DialOption {
 	}
 }
 
+var (
+	url   = flag.String("url", "", "Server url")
+	count = flag.Int("count", 10000, "Count")
+	bs    = flag.Int("bs", 1024, "Block size")
+)
+
 func main() {
-	port := flag.Int("p", 7777, "local port to connect")
 	flag.Parse()
 
-	c, err := grpc.Dial(fmt.Sprintf("192.168.1.13:%d", *port), insecure()...)
+	if *url == "" {
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "URL required\n")
+		os.Exit(1)
+	}
+
+	c, err := grpc.Dial(fmt.Sprintf(*url), insecure()...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,11 +79,13 @@ func main() {
 		panic(err)
 	}
 
-	buf := []byte(strings.Repeat("Z", 102400))
+	buf := []byte(strings.Repeat("Z", *bs))
 	t0 := time.Now()
 
+	log.Printf("Send %d packages (%d each) to %s\n", *count, humanize.Bytes(uint64(*bs)), *url)
+
 	send := 0
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < *count; i++ {
 		st.Send(&pb.RecordMessage{
 			Message: buf,
 		})
@@ -83,7 +96,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Send %s (%s) bytes in %f secs",
+	fmt.Printf("Sent %s (%s) bytes in %f secs\n",
 		humanize.Bytes(uint64(send)),
 		humanize.Bytes(uint64(r.Written)),
 		time.Since(t0).Seconds())

@@ -15,10 +15,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/stats"
 
-	pb "github.com/ilya-zz/foo/api"
+	pb "github.com/ilya-zz/grpc-probe/api"
 )
 
 var log = logrus.New().WithField("type", "SERVER")
@@ -158,26 +157,29 @@ func (*stHnd) HandleConn(ctx context.Context, st stats.ConnStats) {
 */
 
 func options() []grpc.ServerOption {
-	_, err := credentials.NewServerTLSFromFile(certPath, keyPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	/*
+		_, err := credentials.NewServerTLSFromFile(certPath, keyPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	*/
 	return []grpc.ServerOption{}
 }
 
 const certPath = "/tmp/certs/cert.pem"
 const keyPath = "/tmp/certs/key.pem"
 
-func main() {
+var (
+	p    = flag.Int("p", 7777, "GRPC server port")
+	tout = flag.Int("t", 1200, "Server lifetime")
+)
 
-	p := flag.Int("p", 7777, "GRPC server port")
-	tout := flag.Int("t", 120, "Server lifetime")
+func main() {
 
 	flag.Parse()
 
 	//net.JoinHostPort("", strconv.Itoa(*p))
-	srvAddr := fmt.Sprintf("192.168.1.13:%d", *p)
+	srvAddr := fmt.Sprintf("0.0.0.0:%d", *p)
 
 	l, err := net.Listen("tcp", srvAddr)
 	if err != nil {
